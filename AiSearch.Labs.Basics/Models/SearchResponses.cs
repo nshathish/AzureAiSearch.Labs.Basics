@@ -20,17 +20,11 @@ public class SearchAnswerView
 
 public class SearchResultView
 {
+    public string? ChunkId { get; set; }
+    public string? ParentId { get; set; }
     public string? Title { get; set; }
-
     public string Content { get; set; } = string.Empty;
 
-    public string? Caption { get; set; }
-
-    public double? Score { get; set; }
-
-    public double? RerankerScore { get; set; }
-
-    public string? ChunkId { get; set; }
-
-    public string? ParentId { get; set; }
+    public double? KeywordScore { get; set; }
+    public double? SemanticScore { get; set; }
 }
