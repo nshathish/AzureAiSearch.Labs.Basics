@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@source "../Components/**/*.razor";
+
+@theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --color-brand-50: #eef2ff;
+    --color-brand-100: #e0e7ff;
+    --color-brand-200: #c7d2fe;
+    --color-brand-300: #a5b4fc;
+    --color-brand-400: #818cf8;
+    --color-brand-500: #6366f1;
+    --color-brand-600: #4f46e5;
+    --color-brand-700: #4338ca;
+    --color-brand-800: #3730a3;
+    --color-brand-900: #312e81;
+}
+
+@layer base {
+    html {
+        font-family: var(--font-sans);
+    }
+
+    body {
+        @apply bg-slate-50 text-slate-800 antialiased;
+    }
+
+    ::selection {
+        @apply bg-brand-200 text-brand-900;
+    }
+
+    h1:focus {
+        outline: none;
+    }
+
+    #blazor-error-ui {
+        display: none;
+        @apply fixed inset-x-0 bottom-0 z-50 items-center justify-between gap-4 bg-slate-900 px-5 py-3.5 text-sm text-white shadow-[0_-4px_12px_rgba(0,0,0,0.25)];
+    }
+
+    #blazor-error-ui .reload {
+        @apply font-semibold text-brand-300 underline hover:text-brand-200;
+    }
+
+    #blazor-error-ui .dismiss {
+        @apply cursor-pointer text-slate-400 hover:text-white;
+        float: right;
+    }
+
+    .blazor-error-boundary {
+        @apply rounded-xl bg-rose-600 px-4 py-3 pl-14 text-sm text-white;
+        background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #e11d48;
+    }
+
+    .blazor-error-boundary::after {
+        content: "An error has occurred.";
+    }
+
+    .validation-message {
+        @apply mt-1 block text-sm text-rose-600;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold
+               transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none
+               focus-visible:ring-2 focus-visible:ring-offset-2
+               bg-brand-600 text-white shadow-sm hover:bg-brand-700 focus-visible:ring-brand-500 active:bg-brand-800;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold
+               transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none
+               focus-visible:ring-2 focus-visible:ring-offset-2
+               bg-white text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50
+               focus-visible:ring-brand-500;
+    }
+
+    .btn-success {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold
+               transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none
+               focus-visible:ring-2 focus-visible:ring-offset-2
+               bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 focus-visible:ring-emerald-500;
+    }
+
+    .card {
+        @apply rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70;
+    }
+
+    .card-header {
+        @apply flex items-center gap-3 border-b border-slate-100 px-6 py-4;
+    }
+
+    .card-body {
+        @apply px-6 py-5;
+    }
+
+    .form-label {
+        @apply mb-1.5 block text-sm font-medium text-slate-700;
+    }
+
+    .form-input {
+        @apply block w-full rounded-lg border-0 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm
+               ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:outline-none
+               focus:ring-2 focus:ring-inset focus:ring-brand-500;
+    }
+
+    .form-select {
+        @apply block w-full rounded-lg border-0 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm
+               ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:outline-none
+               focus:ring-2 focus:ring-inset focus:ring-brand-500
+               appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2364748b%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.15rem] bg-[right_0.6rem_center] bg-no-repeat pr-9;
+    }
+
+    .badge-brand {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium
+               bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-200;
+    }
+
+    .badge-neutral {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium
+               bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200;
+    }
+
+    .alert-info {
+        @apply flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm
+               bg-sky-50 text-sky-800 ring-1 ring-inset ring-sky-200;
+    }
+
+    .alert-warning {
+        @apply flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm
+               bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200;
+    }
+
+    .alert-danger {
+        @apply flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm
+               bg-rose-50 text-rose-800 ring-1 ring-inset ring-rose-200;
+    }
+
+    .alert-success {
+        @apply flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm
+               bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200;
+    }
+
+    .nav-pill {
+        @apply rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors
+               hover:bg-slate-100 hover:text-slate-900;
+    }
+
+    .nav-pill.active {
+        @apply bg-brand-600 text-white shadow-sm hover:bg-brand-600 hover:text-white;
+    }
+
+    .file-input {
+        @apply block w-full cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60
+               px-4 py-8 text-center text-sm text-slate-500 transition-colors hover:border-brand-400 hover:bg-brand-50/40
+               file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-600 file:px-4 file:py-2.5
+               file:text-sm file:font-semibold file:text-white hover:file:bg-brand-700;
+    }
+}

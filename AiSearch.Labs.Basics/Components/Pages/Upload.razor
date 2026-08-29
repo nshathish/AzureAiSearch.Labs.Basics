@@ -1,0 +1,468 @@
+@page "/upload"
+
+@rendermode InteractiveServer
+
+@inject BlobStorageService BlobStorageService
+@inject AzureSearchAdminService SearchAdminService
+
+<PageTitle>Upload Documents</PageTitle>
+
+<div class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Documents</h1>
+    <p class="mt-2 max-w-2xl text-sm text-slate-600">
+        View documents in Blob Storage, upload new documents,
+        then select an Azure AI Search index and run its indexer.
+    </p>
+</div>
+
+<div class="space-y-6">
+
+    <!-- Existing documents -->
+    <div class="card">
+        <div class="card-header">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                    <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                    <path d="M14 3v5h5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <h2 class="text-base font-semibold text-slate-900">Documents in Blob Storage</h2>
+            @if (!_loadingDocuments)
+            {
+                <span class="badge-neutral ml-auto">@_documents.Count</span>
+            }
+        </div>
+
+        <div class="card-body">
+            @if (_loadingDocuments)
+            {
+                <p class="text-sm text-slate-500">Loading documents...</p>
+            }
+            else if (_documents.Count == 0)
+            {
+                <div class="alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="mt-0.5 h-4 w-4 shrink-0">
+                        <path fill-rule="evenodd" d="M8.485 3.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.63-1.516 2.63H3.72c-1.347 0-2.189-1.463-1.515-2.63L8.485 3.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    <span>No documents found in Blob Storage.</span>
+                </div>
+            }
+            else
+            {
+                <ul class="divide-y divide-slate-100 overflow-hidden rounded-xl ring-1 ring-slate-200">
+                    @foreach (var document in _documents)
+                    {
+                        <li class="flex items-center gap-3 bg-white px-4 py-3 text-sm text-slate-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-4 w-4 shrink-0 text-slate-400">
+                                <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                            </svg>
+                            <span class="truncate">@document</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <!-- Upload -->
+    <div class="card">
+        <div class="card-header">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                    <path d="M12 4v10m0 0l-3.5-3.5M12 14l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M5 16v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <h2 class="text-base font-semibold text-slate-900">Upload document</h2>
+        </div>
+
+        <div class="card-body">
+            <InputFile OnChange="OnFileSelected" class="file-input" />
+
+            @if (_selectedFile is not null)
+            {
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                    <p class="text-sm text-slate-700">
+                        Selected: <strong class="font-semibold text-slate-900">@_selectedFile.Name</strong>
+                        <span class="text-slate-500">(@FormatBytes(_selectedFile.Size))</span>
+                    </p>
+
+                    <button class="btn-primary"
+                            @onclick="UploadAsync"
+                            disabled="@_uploading">
+                        @if (_uploading)
+                        {
+                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span>Uploading...</span>
+                        }
+                        else
+                        {
+                            <span>Upload to Blob Storage</span>
+                        }
+                    </button>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(_uploadMessage))
+            {
+                <div class="alert-info mt-4">
+                    <span>@_uploadMessage</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Only show Azure Search if documents exist -->
+    @if (_documents.Count > 0)
+    {
+        <div class="card">
+            <div class="card-header">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                        <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6" />
+                        <path d="M20 20L16 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <h2 class="text-base font-semibold text-slate-900">Azure AI Search</h2>
+            </div>
+
+            <div class="card-body">
+                @if (_loadingIndexes)
+                {
+                    <p class="text-sm text-slate-500">Loading indexes...</p>
+                }
+                else
+                {
+                    <!-- Existing indexes -->
+                    @if (_indexes.Count > 0)
+                    {
+                        <div class="mb-5">
+                            <label class="form-label">Select existing index</label>
+
+                            <select class="form-select" @bind="_selectedIndex">
+                                <option value="">-- Select an index --</option>
+
+                                @foreach (var index in _indexes)
+                                {
+                                    <option value="@index">@index</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    <div class="my-6 border-t border-slate-100"></div>
+
+                    <!-- Create index -->
+                    <h3 class="mb-3 text-sm font-semibold text-slate-900">Create new index</h3>
+
+                    <div class="mb-4">
+                        <label class="form-label">Index name</label>
+                        <input type="text"
+                               class="form-input"
+                               @bind="_newIndexName"
+                               @bind:event="oninput"
+                               placeholder="e.g. my-documents-index" />
+                    </div>
+
+                    <button class="btn-success"
+                            @onclick="CreateIndexAsync"
+                            disabled="@_creatingIndex">
+                        @if (_creatingIndex)
+                        {
+                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <span>Create Index</span>
+                        }
+                    </button>
+
+                    @if (!string.IsNullOrWhiteSpace(_indexMessage))
+                    {
+                        <div class="alert-info mt-4">
+                            <span>@_indexMessage</span>
+                        </div>
+                    }
+
+                    <!-- Run indexer -->
+                    @if (!string.IsNullOrWhiteSpace(_selectedIndex))
+                    {
+                        <div class="my-6 border-t border-slate-100"></div>
+
+                        <h3 class="mb-2 text-sm font-semibold text-slate-900">Index Documents</h3>
+
+                        <p class="mb-4 text-sm text-slate-600">
+                            Selected index: <span class="badge-brand">@_selectedIndex</span>
+                        </p>
+
+                        <button class="btn-primary"
+                                @onclick="RunIndexerAsync"
+                                disabled="@_runningIndexer">
+                            @if (_runningIndexer)
+                            {
+                                <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                </svg>
+                                <span>Starting...</span>
+                            }
+                            else
+                            {
+                                <span>Start Indexer</span>
+                            }
+                        </button>
+
+                        @if (!string.IsNullOrWhiteSpace(_indexerMessage))
+                        {
+                            <div class="alert-info mt-4">
+                                <span>@_indexerMessage</span>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+
+    private const long MaxFileSize =
+        25 * 1024 * 1024;
+
+
+    // Blob documents
+
+    private List<string> _documents = new();
+
+    private bool _loadingDocuments;
+
+
+    // Upload
+
+    private IBrowserFile? _selectedFile;
+
+    private bool _uploading;
+
+    private string? _uploadMessage;
+
+
+    // Indexes
+
+    private List<string> _indexes = new();
+
+    private string? _selectedIndex;
+
+    private string? _newIndexName;
+
+    private bool _loadingIndexes;
+
+    private bool _creatingIndex;
+
+    private string? _indexMessage;
+
+
+    // Indexer
+
+    private bool _runningIndexer;
+
+    private string? _indexerMessage;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDocumentsAsync();
+
+        if (_documents.Count > 0)
+        {
+            await LoadIndexesAsync();
+        }
+    }
+
+
+    private async Task LoadDocumentsAsync()
+    {
+        _loadingDocuments = true;
+
+        try
+        {
+            _documents =
+                await BlobStorageService.GetDocumentsAsync();
+        }
+        finally
+        {
+            _loadingDocuments = false;
+        }
+    }
+
+
+    private async Task LoadIndexesAsync()
+    {
+        _loadingIndexes = true;
+
+        try
+        {
+            _indexes =
+                await SearchAdminService.GetIndexesAsync();
+        }
+        finally
+        {
+            _loadingIndexes = false;
+        }
+    }
+
+
+    private void OnFileSelected(
+        InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+
+        _uploadMessage = null;
+    }
+
+
+    private async Task UploadAsync()
+    {
+        if (_selectedFile is null)
+            return;
+
+        _uploading = true;
+
+        _uploadMessage = null;
+
+        try
+        {
+            var blobName =
+                await BlobStorageService.UploadAsync(
+                    _selectedFile,
+                    MaxFileSize);
+
+            _uploadMessage =
+                $"Uploaded successfully as: {blobName}";
+
+            // Refresh Blob Storage list
+            await LoadDocumentsAsync();
+
+            // Make sure indexes are available
+            await LoadIndexesAsync();
+
+            _selectedFile = null;
+        }
+        catch (Exception ex)
+        {
+            _uploadMessage =
+                $"Upload failed: {ex.Message}";
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+
+
+    private async Task CreateIndexAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newIndexName))
+        {
+            _indexMessage =
+                "Please enter an index name.";
+
+            return;
+        }
+
+        _creatingIndex = true;
+
+        _indexMessage = null;
+
+        try
+        {
+            await SearchAdminService
+                .CreateIndexAsync(_newIndexName);
+
+            await SearchAdminService.CreateDataSourceAsync(
+                _newIndexName);
+
+            _indexMessage =
+                $"Index '{_newIndexName}' created.";
+
+            await LoadIndexesAsync();
+
+            _selectedIndex = _newIndexName;
+
+            _newIndexName = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _indexMessage =
+                $"Failed to create index: {ex.Message}";
+        }
+        finally
+        {
+            _creatingIndex = false;
+        }
+    }
+
+
+    private async Task RunIndexerAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedIndex))
+            return;
+
+        _runningIndexer = true;
+        _indexerMessage = null;
+
+        try
+        {
+            var result =
+                await SearchAdminService.RunAndWaitForIndexerAsync(
+                    _selectedIndex);
+
+            var details = new List<string>
+            {
+                $"Status: {result.Status}.",
+                $"Source items processed: {result.ItemCount}.",
+                $"Failed: {result.FailedItemCount}.",
+                $"Warnings: {result.Warnings.Count}."
+            };
+
+            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+                details.Add(result.ErrorMessage);
+
+            details.AddRange(
+                result.Errors.Take(5).Select(x => x.ErrorMessage));
+
+            details.AddRange(
+                result.Warnings.Take(5).Select(x => x.Message));
+
+            _indexerMessage = string.Join(" ", details);
+        }
+        catch (OperationCanceledException)
+        {
+            _indexerMessage =
+                "Stopped waiting after 30 minutes. " +
+                "The Azure indexer may still be running; check its status.";
+        }
+        catch (Exception ex)
+        {
+            _indexerMessage = $"Indexing failed: {ex.Message}";
+        }
+        finally
+        {
+            _runningIndexer = false;
+        }
+    }
+
+
+    private static string FormatBytes(long bytes)
+        => bytes >= 1024 * 1024
+            ? $"{bytes / 1024d / 1024d:F1} MB"
+            : $"{bytes / 1024d:F1} KB";
+}

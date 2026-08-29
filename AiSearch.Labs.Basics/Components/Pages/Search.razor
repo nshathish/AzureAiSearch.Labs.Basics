@@ -1,0 +1,330 @@
+@page "/search"
+@rendermode InteractiveServer
+
+@inject AzureAiSearchService SearchService
+@inject AzureSearchAdminService SearchAdminService
+
+<PageTitle>Search</PageTitle>
+
+<div class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Search</h1>
+    <p class="mt-2 max-w-2xl text-sm text-slate-600">Select an Azure AI Search index and search its documents.</p>
+</div>
+
+<!-- Index selection -->
+<div class="mb-6">
+    <label class="form-label">Search index</label>
+
+    @if (_loadingIndexes)
+    {
+        <p class="text-sm text-slate-500">Loading indexes...</p>
+    }
+    else if (_indexes.Count == 0)
+    {
+        <div class="alert-warning">
+            <span>No search indexes found.</span>
+        </div>
+    }
+    else
+    {
+        <select class="form-select max-w-md" @bind="_selectedIndex">
+            <option value="">-- Select an index --</option>
+
+            @foreach (var index in _indexes)
+            {
+                <option value="@index">@index</option>
+            }
+        </select>
+    }
+</div>
+
+<!-- Search -->
+@if (!string.IsNullOrWhiteSpace(_selectedIndex))
+{
+    <div class="mb-3 text-sm text-slate-500">
+        Searching index: <span class="badge-brand">@_selectedIndex</span>
+    </div>
+
+    <div class="mb-8 flex gap-2">
+        <div class="relative flex-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+            </svg>
+
+            <input class="form-input pl-10"
+                   @bind="_query"
+                   @bind:event="oninput"
+                   @onkeydown="HandleKeyDown"
+                   placeholder="Enter search query..." />
+        </div>
+
+        <button class="btn-primary"
+                @onclick="SearchAsync"
+                disabled="@(_busy || string.IsNullOrWhiteSpace(_query))">
+            @if (_busy)
+            {
+                <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span>Searching...</span>
+            }
+            else
+            {
+                <span>Search</span>
+            }
+        </button>
+    </div>
+}
+
+<!-- Error -->
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <div class="alert-danger mb-6">
+        <span>@_error</span>
+    </div>
+}
+
+<!-- Results -->
+@if (_response is not null)
+{
+    <div class="mb-5 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+        <span class="badge-neutral">Mode: @_response.Mode</span>
+
+        @if (_response.TotalCount is not null)
+        {
+            <span>Total matches: <strong class="font-semibold text-slate-700">@_response.TotalCount</strong></span>
+        }
+        
+        <span>
+            Showing @_response.Results.Count results.
+            For chunk indexes, each match represents a chunk.
+        </span>
+    </div>
+
+    <!-- Semantic answers -->
+    @if (_response.Answers.Count > 0)
+    {
+        <div class="card mb-6 ring-emerald-200">
+            <div class="card-header border-emerald-100">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+                        <path d="M12 3l2.6 5.27 5.82.85-4.21 4.1 1 5.8L12 16.27l-5.21 2.75 1-5.8-4.21-4.1 5.82-.85z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h2 class="text-base font-semibold text-slate-900">Semantic answer</h2>
+            </div>
+
+            <div class="card-body">
+                @foreach (var answer in _response.Answers)
+                {
+                    <p class="mb-2 text-sm leading-relaxed text-slate-700">@answer.Text</p>
+
+                    <span class="badge-neutral">Score: @answer.Score?.ToString("F3")</span>
+                }
+            </div>
+        </div>
+    }
+
+    <h2 class="mb-4 text-base font-semibold text-slate-900">Search Results</h2>
+
+    @if (_response.Results.Count == 0)
+    {
+        <p class="text-sm text-slate-500">No results.</p>
+    }
+
+    <div class="space-y-4">
+        @foreach (var item in _response.Results)
+        {
+            <article class="card">
+                <div class="card-body min-w-0">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <h3 class="min-w-0 text-base font-semibold text-slate-900"
+                            style="overflow-wrap: anywhere;"
+                            title="@item.Title">
+                            @GetDisplayTitle(item.Title)
+                        </h3>
+
+                        <span class="badge-neutral">
+                            Score: @item.Score?.ToString("F2")
+                        </span>
+                    </div>
+
+                    <p class="mt-3 text-sm leading-relaxed text-slate-600"
+                       style="overflow-wrap: anywhere;">
+                        @GetPreview(item.Content)
+                    </p>
+
+                    @if (item.Content.Length > PreviewLength)
+                    {
+                        <details class="mt-4">
+                            <summary class="cursor-pointer text-sm font-medium text-brand-600">
+                                View full chunk
+                            </summary>
+
+                            <div class="mt-3 rounded-lg bg-slate-50 p-4 text-sm leading-relaxed text-slate-700"
+                                 style="white-space: pre-wrap; overflow-wrap: anywhere;">
+                                @item.Content
+                            </div>
+                        </details>
+                    }
+
+                    <details class="mt-4">
+                        <summary class="cursor-pointer text-xs text-slate-500">
+                            Technical details
+                        </summary>
+
+                        <dl class="mt-3 space-y-3 text-xs text-slate-500">
+                            <div>
+                                <dt class="font-semibold">Stored filename</dt>
+                                <dd style="overflow-wrap: anywhere;">@item.Title</dd>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(item.ChunkId))
+                            {
+                                <div>
+                                    <dt class="font-semibold">Chunk ID</dt>
+                                    <dd class="font-mono"
+                                        style="overflow-wrap: anywhere;">@item.ChunkId</dd>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(item.ParentId))
+                            {
+                                <div>
+                                    <dt class="font-semibold">Parent ID</dt>
+                                    <dd class="font-mono"
+                                        style="overflow-wrap: anywhere;">@item.ParentId</dd>
+                                </div>
+                            }
+                        </dl>
+                    </details>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@code {
+
+    private List<string> _indexes = new();
+
+    private string? _selectedIndex;
+
+    private bool _loadingIndexes;
+
+    private string _query = string.Empty;
+
+    private bool _busy;
+
+    private string? _error;
+
+    private SearchResponseView? _response;
+
+    private const int PreviewLength = 350;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIndexesAsync();
+    }
+
+
+    private async Task LoadIndexesAsync()
+    {
+        _loadingIndexes = true;
+
+        try
+        {
+            _indexes =
+                await SearchAdminService.GetIndexesAsync();
+        }
+        catch (Exception ex)
+        {
+            _error =
+                $"Failed to load indexes: {ex.Message}";
+        }
+        finally
+        {
+            _loadingIndexes = false;
+        }
+    }
+
+
+    private async Task SearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_query) ||
+            string.IsNullOrWhiteSpace(_selectedIndex))
+        {
+            return;
+        }
+
+        _busy = true;
+
+        _error = null;
+
+        _response = null;
+
+        try
+        {
+            _response =
+                await SearchService.SearchAsync(
+                    _selectedIndex,
+                    _query);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+
+    private async Task HandleKeyDown(
+        KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchAsync();
+        }
+    }
+
+    private static string GetDisplayTitle(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return "Untitled document";
+
+        // Remove only the timestamp/GUID prefix added during upload.
+        var displayName =
+            System.Text.RegularExpressions.Regex.Replace(
+                title,
+                @"^\d{14}-[0-9a-fA-F]{32}-",
+                string.Empty);
+
+        return displayName.Replace('_', ' ');
+    }
+
+    private static string GetPreview(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return "No text available.";
+
+        var text = System.Text.RegularExpressions.Regex.Replace(
+            content,
+            @"\s+",
+            " ").Trim();
+
+        if (text.Length <= PreviewLength)
+            return text;
+
+        var cutAt = text.LastIndexOf(' ', PreviewLength);
+
+        if (cutAt < PreviewLength / 2)
+            cutAt = PreviewLength;
+
+        return text[..cutAt].TrimEnd() + "…";
+    }
+}

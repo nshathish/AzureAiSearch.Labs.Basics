@@ -1,0 +1,56 @@
+# .NET build outputs
+bin/
+obj/
+
+# Blazor publish outputs
+wwwroot/dist/
+wwwroot/css/site.css
+wwwroot/css/site.min.css
+
+# Node + Tailwind
+node_modules/
+package-lock.json
+
+# Tailwind build cache
+*.cache
+*.tmp
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider / JetBrains
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Environment configs (keep base appsettings.json committed)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+
+# Logs
+*.log
+logs/
+
+# User secrets
+**/secrets.json
+
+# Test results
+TestResults/
+*.coverage
+*.coveragexml
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db

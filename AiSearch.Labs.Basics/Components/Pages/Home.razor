@@ -1,0 +1,72 @@
+@page "/"
+
+<PageTitle>Azure AI Search Lab</PageTitle>
+
+<div class="mb-10">
+    <span class="badge-brand mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v3.5c0 .2.08.39.22.53l2.5 2.5a.75.75 0 101.06-1.06l-2.28-2.28V6.75z" clip-rule="evenodd" />
+        </svg>
+        Azure Blob Storage &rarr; Indexer &rarr; AI Search
+    </span>
+
+    <h1 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        Azure AI Search Lab
+    </h1>
+
+    <p class="mt-3 max-w-2xl text-base text-slate-600">
+        A small Blazor app for learning the Blob Storage &rarr; Indexer &rarr; Azure AI Search workflow.
+    </p>
+</div>
+
+<div class="grid gap-5 sm:grid-cols-2">
+
+    <div class="card group overflow-hidden transition-shadow hover:shadow-md">
+        <div class="card-body">
+            <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-6 w-6">
+                    <path d="M12 4v10m0 0l-3.5-3.5M12 14l3.5-3.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M5 16v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <h5 class="text-sm font-semibold text-brand-600">Step 1</h5>
+            <h2 class="mt-0.5 text-lg font-semibold text-slate-900">Documents</h2>
+            <p class="mt-2 text-sm text-slate-600">
+                Upload documents to Azure Blob Storage, create a search index, and run the indexer.
+            </p>
+
+            <NavLink class="btn-primary mt-5" href="upload">
+                Manage documents
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 transition-transform group-hover:translate-x-0.5">
+                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </NavLink>
+        </div>
+    </div>
+
+    <div class="card group overflow-hidden transition-shadow hover:shadow-md">
+        <div class="card-body">
+            <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-6 w-6">
+                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.75" />
+                    <path d="M20 20L16 16" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <h5 class="text-sm font-semibold text-brand-600">Step 2</h5>
+            <h2 class="mt-0.5 text-lg font-semibold text-slate-900">Search</h2>
+            <p class="mt-2 text-sm text-slate-600">
+                Query an Azure AI Search index and inspect results, scores, and semantic answers.
+            </p>
+
+            <NavLink class="btn-secondary mt-5" href="search">
+                Search documents
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 transition-transform group-hover:translate-x-0.5">
+                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </NavLink>
+        </div>
+    </div>
+
+</div>
