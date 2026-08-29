@@ -32,7 +32,7 @@ public sealed class AzureAiSearchService
             return new SearchResponseView
             {
                 TotalCount = 0,
-                Mode = "Keyword"
+                Mode = "Semantic"
             };
 
         var searchClient = new SearchClient(
@@ -44,8 +44,11 @@ public sealed class AzureAiSearchService
         {
             Size = 5,
             IncludeTotalCount = true,
-            QueryType = SearchQueryType.Simple,
-            SearchMode = SearchMode.Any
+            QueryType = SearchQueryType.Semantic,
+            SemanticSearch = new SemanticSearchOptions
+            {
+                SemanticConfigurationName = _options.SemanticConfigurationName
+            }
         };
 
         // Search within the chunk content.
@@ -66,7 +69,7 @@ public sealed class AzureAiSearchService
         var output = new SearchResponseView
         {
             TotalCount = response.Value.TotalCount,
-            Mode = "Keyword"
+            Mode = "Semantic"
         };
 
         await foreach (var result in response.Value.GetResultsAsync())
@@ -75,15 +78,17 @@ public sealed class AzureAiSearchService
 
             output.Results.Add(new SearchResultView
             {
-                ChunkId = result.Document.ChunkId,
-                ParentId = result.Document.ParentId,
-                Title = result.Document.Title,
-                Content = result.Document.Content,
-                Score = result.Score
+                ChunkId = document.ChunkId,
+                ParentId = document.ParentId,
+                Title = document.Title,
+                Content = document.Content,
+
+                // Semantic reranker score when available.
+                SemanticScore = result.SemanticSearch?.RerankerScore,
+                KeywordScore = result.Score
             });
         }
 
         return output;
     }
-    
 }
