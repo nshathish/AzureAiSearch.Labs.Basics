@@ -11,17 +11,20 @@ public sealed class AzureSearchAdminService
 {
     private readonly AzureSearchOptions _searchOptions;
     private readonly AzureStorageOptions _storageOptions;
+    private readonly AzureOpenAiSettings _openAIOptions;
 
     private readonly SearchIndexClient _indexClient;
     private readonly SearchIndexerClient _indexerClient;
 
     public AzureSearchAdminService(
         IOptions<AzureSearchOptions> searchOptions,
-        IOptions<AzureStorageOptions> storageOptions
+        IOptions<AzureStorageOptions> storageOptions,
+        IOptions<AzureOpenAiSettings> openAIOptions 
     )
     {
         _searchOptions = searchOptions.Value;
         _storageOptions = storageOptions.Value;
+        _openAIOptions = openAIOptions.Value;
 
         _indexClient = new SearchIndexClient(
             new Uri(_searchOptions.Endpoint),
@@ -55,6 +58,19 @@ public sealed class AzureSearchAdminService
 
         var index = new SearchIndex(indexName, fields)
         {
+            VectorSearch = new VectorSearch
+            {
+                Algorithms =
+                {
+                    new HnswAlgorithmConfiguration("hnsw-config")
+                },
+                Profiles =
+                {
+                    new VectorSearchProfile(
+                        "vector-profile",
+                        "hnsw-config")
+                }
+            },
             SemanticSearch = new SemanticSearch
             {
                 DefaultConfigurationName =
@@ -312,6 +328,29 @@ public sealed class AzureSearchAdminService
             PageOverlapLength = _searchOptions.ChunkOverlap
         };
 
+        var embeddingSkill = new AzureOpenAIEmbeddingSkill(
+            [
+                new InputFieldMappingEntry("text")
+                {
+                    Source = "/document/chunks/*"
+                }
+            ],
+            [
+                new OutputFieldMappingEntry("embedding")
+                {
+                    TargetName = "content_vector"
+                }
+            ])
+        {
+            Name = "embed-chunks",
+            Context = "/document/chunks/*",
+            ResourceUri = new Uri(_openAIOptions.Endpoint),
+            ApiKey = _openAIOptions.ApiKey,
+            DeploymentName = _openAIOptions.EmbeddingDeploymentName,
+            ModelName = AzureOpenAIModelName.TextEmbedding3Small,
+            Dimensions = _openAIOptions.EmbeddingDimensions
+        };
+
         var selector = new SearchIndexerIndexProjectionSelector(
             indexName,
             "ParentId",
@@ -324,6 +363,10 @@ public sealed class AzureSearchAdminService
                 new InputFieldMappingEntry("Content")
                 {
                     Source = "/document/chunks/*"
+                },
+                new InputFieldMappingEntry("ContentVector")
+                {
+                    Source = "/document/chunks/*/content_vector"
                 }
             ]);
 
@@ -332,7 +375,8 @@ public sealed class AzureSearchAdminService
             [
                 // ocrSkill,
                 // mergeSkill,
-                splitSkill
+                splitSkill,
+                embeddingSkill
             ])
         {
             //CognitiveServicesAccount =
